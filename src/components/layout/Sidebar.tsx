@@ -2,9 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Bug, LayoutDashboard, FolderOpen, LogOut, Plus } from 'lucide-react'
+import { Bug, LayoutDashboard, FolderOpen, LogOut, Plus, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+
+interface Props {
+  userEmail: string
+  userDisplayName: string | null
+}
 
 const nav = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'ダッシュボード' },
@@ -12,7 +17,7 @@ const nav = [
   { href: '/projects', icon: FolderOpen, label: 'プロジェクト' },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ userEmail, userDisplayName }: Props) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -22,6 +27,8 @@ export default function Sidebar() {
     router.push('/auth/login')
     router.refresh()
   }
+
+  const displayName = userDisplayName || userEmail
 
   return (
     <aside className="w-60 bg-gray-900 border-r border-gray-800 flex flex-col h-screen sticky top-0">
@@ -60,7 +67,19 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="p-3 border-t border-gray-800">
+      <div className="p-3 border-t border-gray-800 space-y-1">
+        <Link
+          href="/settings"
+          className={cn(
+            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
+            pathname === '/settings'
+              ? 'bg-gray-800 text-white'
+              : 'text-gray-400 hover:text-white hover:bg-gray-800'
+          )}
+        >
+          <User className="w-4 h-4 shrink-0" />
+          <span className="truncate">{displayName}</span>
+        </Link>
         <button
           onClick={handleSignOut}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-colors w-full"
