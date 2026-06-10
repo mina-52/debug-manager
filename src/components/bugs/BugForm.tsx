@@ -27,6 +27,7 @@ export default function BugForm({ projects, bug }: Props) {
   const [tagInput, setTagInput] = useState('')
   const [tags, setTags] = useState<string[]>(bug?.tags ?? [])
   const [existingImages, setExistingImages] = useState<string[]>(bug?.images ?? [])
+  const [removedImages, setRemovedImages] = useState<string[]>([])
   const [newFiles, setNewFiles] = useState<File[]>([])
   const [newPreviews, setNewPreviews] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -43,6 +44,7 @@ export default function BugForm({ projects, bug }: Props) {
   }
 
   function removeExistingImage(index: number) {
+    setRemovedImages(prev => [...prev, existingImages[index]])
     setExistingImages(existingImages.filter((_, i) => i !== index))
   }
 
@@ -72,6 +74,21 @@ export default function BugForm({ projects, bug }: Props) {
     e.target.value = ''
   }
 
+  function storagePathFromUrl(url: string): string {
+    const marker = '/bug-images/'
+    const idx = url.indexOf(marker)
+    return idx !== -1 ? url.slice(idx + marker.length) : ''
+  }
+
+  async function deleteRemovedImages() {
+    if (removedImages.length === 0) return
+    const supabase = createClient()
+    const paths = removedImages.map(storagePathFromUrl).filter(Boolean)
+    if (paths.length > 0) {
+      await supabase.storage.from('bug-images').remove(paths)
+    }
+  }
+
   async function uploadImages(userId: string): Promise<string[]> {
     const supabase = createClient()
     const urls: string[] = []
@@ -97,6 +114,7 @@ export default function BugForm({ projects, bug }: Props) {
 
     let uploadedUrls: string[] = []
     try {
+      await deleteRemovedImages()
       uploadedUrls = await uploadImages(user.id)
     } catch (err) {
       setError((err as Error).message)
