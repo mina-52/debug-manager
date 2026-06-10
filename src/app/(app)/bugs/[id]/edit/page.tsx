@@ -18,7 +18,7 @@ export default async function EditBugPage({ params }: Props) {
   const { data: projects } = await supabase.from('projects').select('id, name').order('name')
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-4 sm:p-8 max-w-2xl">
       <Link href={`/bugs/${id}`} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-6 transition-colors w-fit">
         <ArrowLeft className="w-4 h-4" />
         詳細へ戻る

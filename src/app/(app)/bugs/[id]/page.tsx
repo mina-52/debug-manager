@@ -81,7 +81,7 @@ export default async function BugDetailPage({ params }: Props) {
     .single()
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 sm:p-8 max-w-3xl">
       <Link href="/bugs" className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-6 transition-colors w-fit">
         <ArrowLeft className="w-4 h-4" />
         要望・バグ等一覧へ戻る

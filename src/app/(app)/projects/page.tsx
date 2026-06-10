@@ -15,8 +15,8 @@ export default async function ProjectsPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-8">
+      <div className="flex items-center justify-between mb-6 sm:mb-8 gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-white">プロジェクト</h1>
           <p className="text-gray-400 mt-1 text-sm">{projects?.length ?? 0} 件</p>

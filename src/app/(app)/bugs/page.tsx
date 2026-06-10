@@ -70,8 +70,8 @@ export default async function BugsPage({ searchParams }: Props) {
   })) as BugType[]
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-8">
+      <div className="flex items-center justify-between mb-6 sm:mb-8 gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-white">要望・バグ等一覧</h1>
           <p className="text-gray-400 mt-1 text-sm">{bugsWithCreators.length} 件</p>
@@ -97,34 +97,36 @@ export default async function BugsPage({ searchParams }: Props) {
           <ul className="divide-y divide-gray-800">
             {bugsWithCreators.map(bug => (
               <li key={bug.id}>
-                <Link href={`/bugs/${bug.id}`} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-800/50 transition-colors">
+                <Link href={`/bugs/${bug.id}`} className="flex items-start gap-3 px-4 sm:px-6 py-4 hover:bg-gray-800/50 transition-colors">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white">{bug.title}</p>
-                    <div className="flex items-center gap-3 mt-1 flex-wrap">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       {bug.project && (
                         <span className="text-xs text-indigo-400">{(bug.project as { name: string }).name}</span>
                       )}
                       {bug.tags && bug.tags.length > 0 && (
-                        <div className="flex gap-1">
+                        <div className="hidden sm:flex gap-1">
                           {bug.tags.slice(0, 3).map(tag => (
                             <span key={tag} className="text-xs bg-gray-800 text-gray-400 rounded px-1.5 py-0.5">{tag}</span>
                           ))}
                         </div>
                       )}
                       {bug.creator && (
-                        <span className="text-xs text-gray-500">登録: {userDisplay(bug.creator)}</span>
+                        <span className="hidden sm:inline text-xs text-gray-500">登録: {userDisplay(bug.creator)}</span>
                       )}
                       <span className="text-xs text-gray-500">
                         {formatDistanceToNow(new Date(bug.updated_at), { addSuffix: true, locale: ja })}
                       </span>
                     </div>
                   </div>
-                  <span className={`text-xs font-medium ${priorityColor[bug.priority]}`}>
-                    {priorityLabel[bug.priority]}
-                  </span>
-                  <span className={`text-xs px-2.5 py-1 rounded-full border ${statusColor[bug.status]}`}>
-                    {statusLabel[bug.status]}
-                  </span>
+                  <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 sm:gap-3 shrink-0">
+                    <span className={`text-xs font-medium ${priorityColor[bug.priority]}`}>
+                      {priorityLabel[bug.priority]}
+                    </span>
+                    <span className={`text-xs px-2.5 py-1 rounded-full border ${statusColor[bug.status]}`}>
+                      {statusLabel[bug.status]}
+                    </span>
+                  </div>
                 </Link>
               </li>
             ))}

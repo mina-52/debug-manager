@@ -49,14 +49,14 @@ export default function BugFilters({ projects, currentParams }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap gap-3">
-      <form onSubmit={handleSearch} className="relative">
+    <div className="flex flex-wrap gap-2 sm:gap-3">
+      <form onSubmit={handleSearch} className="relative w-full sm:w-auto">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
         <input
           value={q}
           onChange={e => setQ(e.target.value)}
           placeholder="タイトルで検索..."
-          className="bg-gray-900 border border-gray-700 rounded-lg pl-9 pr-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 w-56 transition-colors"
+          className="bg-gray-900 border border-gray-700 rounded-lg pl-9 pr-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 w-full sm:w-56 transition-colors"
         />
       </form>
 

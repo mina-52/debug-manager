@@ -16,7 +16,7 @@ export default async function SettingsPage() {
     .single()
 
   return (
-    <div className="p-8 max-w-lg">
+    <div className="p-4 sm:p-8 max-w-lg">
       <Link
         href="/dashboard"
         className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-6 transition-colors w-fit"

@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 interface Props {
   userEmail: string
   userDisplayName: string | null
+  onNavigate?: () => void
 }
 
 const nav = [
@@ -17,7 +18,7 @@ const nav = [
   { href: '/projects', icon: FolderOpen, label: 'プロジェクト' },
 ]
 
-export default function Sidebar({ userEmail, userDisplayName }: Props) {
+export default function Sidebar({ userEmail, userDisplayName, onNavigate }: Props) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -42,6 +43,7 @@ export default function Sidebar({ userEmail, userDisplayName }: Props) {
       <div className="p-3">
         <Link
           href="/bugs/new"
+          onClick={onNavigate}
           className="flex items-center gap-2 w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -54,6 +56,7 @@ export default function Sidebar({ userEmail, userDisplayName }: Props) {
           <Link
             key={href}
             href={href}
+            onClick={onNavigate}
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
               pathname === href || pathname.startsWith(href + '/')
@@ -70,6 +73,7 @@ export default function Sidebar({ userEmail, userDisplayName }: Props) {
       <div className="p-3 border-t border-gray-800 space-y-1">
         <Link
           href="/settings"
+          onClick={onNavigate}
           className={cn(
             'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
             pathname === '/settings'

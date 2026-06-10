@@ -62,13 +62,13 @@ export default async function DashboardPage() {
   ]
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">ダッシュボード</h1>
         <p className="text-gray-400 mt-1 text-sm">要望・バグ等の概要</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-8 sm:mb-10">
         {statCards.map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-5">
             <div className={`inline-flex p-2 rounded-lg ${bg} mb-3`}>
@@ -100,19 +100,21 @@ export default async function DashboardPage() {
           <ul className="divide-y divide-gray-800">
             {stats.recent.map(bug => (
               <li key={bug.id}>
-                <Link href={`/bugs/${bug.id}`} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-800/50 transition-colors">
+                <Link href={`/bugs/${bug.id}`} className="flex items-start gap-3 px-4 sm:px-6 py-4 hover:bg-gray-800/50 transition-colors">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white truncate">{bug.title}</p>
                     <p className="text-xs text-gray-500 mt-0.5">
                       {formatDistanceToNow(new Date(bug.updated_at), { addSuffix: true, locale: ja })}
                     </p>
                   </div>
-                  <span className={`text-xs font-medium ${priorityColor[bug.priority]}`}>
-                    {priorityLabel[bug.priority]}
-                  </span>
-                  <span className={`text-xs px-2.5 py-1 rounded-full border ${statusColor[bug.status]}`}>
-                    {statusLabel[bug.status]}
-                  </span>
+                  <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 sm:gap-3 shrink-0">
+                    <span className={`text-xs font-medium ${priorityColor[bug.priority]}`}>
+                      {priorityLabel[bug.priority]}
+                    </span>
+                    <span className={`text-xs px-2.5 py-1 rounded-full border ${statusColor[bug.status]}`}>
+                      {statusLabel[bug.status]}
+                    </span>
+                  </div>
                 </Link>
               </li>
             ))}
