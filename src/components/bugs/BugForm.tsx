@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { X, ImagePlus } from 'lucide-react'
 import type { Bug } from '@/types'
+import { deleteBugImages } from '@/app/actions/storage'
 
 interface Props {
   projects: { id: string; name: string }[]
@@ -74,21 +75,6 @@ export default function BugForm({ projects, bug }: Props) {
     e.target.value = ''
   }
 
-  function storagePathFromUrl(url: string): string {
-    const marker = '/bug-images/'
-    const idx = url.indexOf(marker)
-    return idx !== -1 ? url.slice(idx + marker.length) : ''
-  }
-
-  async function deleteRemovedImages() {
-    if (removedImages.length === 0) return
-    const supabase = createClient()
-    const paths = removedImages.map(storagePathFromUrl).filter(Boolean)
-    if (paths.length > 0) {
-      await supabase.storage.from('bug-images').remove(paths)
-    }
-  }
-
   async function uploadImages(userId: string): Promise<string[]> {
     const supabase = createClient()
     const urls: string[] = []
@@ -114,7 +100,7 @@ export default function BugForm({ projects, bug }: Props) {
 
     let uploadedUrls: string[] = []
     try {
-      await deleteRemovedImages()
+      await deleteBugImages(removedImages)
       uploadedUrls = await uploadImages(user.id)
     } catch (err) {
       setError((err as Error).message)

@@ -4,12 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Trash2 } from 'lucide-react'
-
-function storagePathFromUrl(url: string): string {
-  const marker = '/bug-images/'
-  const idx = url.indexOf(marker)
-  return idx !== -1 ? url.slice(idx + marker.length) : ''
-}
+import { deleteBugImages } from '@/app/actions/storage'
 
 export default function DeleteBugButton({ bugId }: { bugId: string }) {
   const router = useRouter()
@@ -27,10 +22,7 @@ export default function DeleteBugButton({ bugId }: { bugId: string }) {
       .single()
 
     if (bug?.images && bug.images.length > 0) {
-      const paths = (bug.images as string[]).map(storagePathFromUrl).filter(Boolean)
-      if (paths.length > 0) {
-        await supabase.storage.from('bug-images').remove(paths)
-      }
+      await deleteBugImages(bug.images as string[])
     }
 
     await supabase.from('bugs').delete().eq('id', bugId)
