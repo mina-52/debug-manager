@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { X } from 'lucide-react'
+import { X, ImagePlus } from 'lucide-react'
 import type { Bug } from '@/types'
 
 interface Props {
@@ -11,9 +11,13 @@ interface Props {
   bug?: Bug
 }
 
+const MAX_FILES = 5
+const MAX_SIZE_MB = 5
+
 export default function BugForm({ projects, bug }: Props) {
   const router = useRouter()
   const isEdit = !!bug
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [title, setTitle] = useState(bug?.title ?? '')
   const [description, setDescription] = useState(bug?.description ?? '')
@@ -22,19 +26,64 @@ export default function BugForm({ projects, bug }: Props) {
   const [projectId, setProjectId] = useState(bug?.project_id ?? '')
   const [tagInput, setTagInput] = useState('')
   const [tags, setTags] = useState<string[]>(bug?.tags ?? [])
+  const [existingImages, setExistingImages] = useState<string[]>(bug?.images ?? [])
+  const [newFiles, setNewFiles] = useState<File[]>([])
+  const [newPreviews, setNewPreviews] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   function addTag() {
     const t = tagInput.trim()
-    if (t && !tags.includes(t)) {
-      setTags([...tags, t])
-    }
+    if (t && !tags.includes(t)) setTags([...tags, t])
     setTagInput('')
   }
 
   function removeTag(tag: string) {
     setTags(tags.filter(t => t !== tag))
+  }
+
+  function removeExistingImage(index: number) {
+    setExistingImages(existingImages.filter((_, i) => i !== index))
+  }
+
+  function removeNewFile(index: number) {
+    setNewFiles(newFiles.filter((_, i) => i !== index))
+    URL.revokeObjectURL(newPreviews[index])
+    setNewPreviews(newPreviews.filter((_, i) => i !== index))
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = Array.from(e.target.files ?? [])
+    const totalCount = existingImages.length + newFiles.length + selected.length
+    if (totalCount > MAX_FILES) {
+      setError(`画像は最大${MAX_FILES}枚まで添付できます`)
+      e.target.value = ''
+      return
+    }
+    const oversized = selected.filter(f => f.size > MAX_SIZE_MB * 1024 * 1024)
+    if (oversized.length > 0) {
+      setError(`1枚あたり${MAX_SIZE_MB}MB以内の画像を選択してください`)
+      e.target.value = ''
+      return
+    }
+    setError(null)
+    setNewFiles(prev => [...prev, ...selected])
+    setNewPreviews(prev => [...prev, ...selected.map(f => URL.createObjectURL(f))])
+    e.target.value = ''
+  }
+
+  async function uploadImages(userId: string): Promise<string[]> {
+    const supabase = createClient()
+    const urls: string[] = []
+    for (const file of newFiles) {
+      const ext = file.name.split('.').pop() ?? 'jpg'
+      const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await supabase.storage.from('bug-images').upload(path, file)
+      if (error) throw new Error(`画像のアップロードに失敗しました: ${error.message}`)
+      const { data: { publicUrl } } = supabase.storage.from('bug-images').getPublicUrl(path)
+      urls.push(publicUrl)
+    }
+    return urls
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -46,6 +95,15 @@ export default function BugForm({ projects, bug }: Props) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setError('ログインが必要です'); setLoading(false); return }
 
+    let uploadedUrls: string[] = []
+    try {
+      uploadedUrls = await uploadImages(user.id)
+    } catch (err) {
+      setError((err as Error).message)
+      setLoading(false)
+      return
+    }
+
     const now = new Date().toISOString()
     const payload = {
       title,
@@ -54,6 +112,7 @@ export default function BugForm({ projects, bug }: Props) {
       priority,
       project_id: projectId || null,
       tags,
+      images: [...existingImages, ...uploadedUrls],
       updated_at: now,
       updated_by: user.id,
     }
@@ -75,6 +134,7 @@ export default function BugForm({ projects, bug }: Props) {
   }
 
   const fieldClass = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors text-sm'
+  const totalImages = existingImages.length + newFiles.length
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -98,6 +158,59 @@ export default function BugForm({ projects, bug }: Props) {
           className={`${fieldClass} resize-none`}
           placeholder="再現手順、期待する動作、実際の動作など..."
         />
+      </div>
+
+      <div>
+        <label className="block text-sm text-gray-400 mb-1.5">画像</label>
+
+        {(existingImages.length > 0 || newPreviews.length > 0) && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {existingImages.map((url, i) => (
+              <div key={`existing-${i}`} className="relative group">
+                <img src={url} alt="" className="w-20 h-20 object-cover rounded-lg border border-gray-700" />
+                <button
+                  type="button"
+                  onClick={() => removeExistingImage(i)}
+                  className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-400 rounded-full w-5 h-5 flex items-center justify-center transition-colors"
+                >
+                  <X className="w-3 h-3 text-white" />
+                </button>
+              </div>
+            ))}
+            {newPreviews.map((preview, i) => (
+              <div key={`new-${i}`} className="relative group">
+                <img src={preview} alt="" className="w-20 h-20 object-cover rounded-lg border border-indigo-700" />
+                <button
+                  type="button"
+                  onClick={() => removeNewFile(i)}
+                  className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-400 rounded-full w-5 h-5 flex items-center justify-center transition-colors"
+                >
+                  <X className="w-3 h-3 text-white" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {totalImages < MAX_FILES && (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white bg-gray-800 border border-gray-700 border-dashed rounded-lg px-4 py-2.5 transition-colors"
+          >
+            <ImagePlus className="w-4 h-4" />
+            画像を追加
+          </button>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+        <p className="text-xs text-gray-600 mt-1">最大{MAX_FILES}枚・1枚あたり{MAX_SIZE_MB}MB以内（JPG・PNG・GIF・WebP）</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -173,7 +286,7 @@ export default function BugForm({ projects, bug }: Props) {
           disabled={loading}
           className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white rounded-lg px-6 py-2.5 text-sm font-medium transition-colors"
         >
-          {loading ? '保存中...' : isEdit ? '更新する' : '登録する'}
+          {loading ? (newFiles.length > 0 ? '画像をアップロード中...' : '保存中...') : isEdit ? '更新する' : '登録する'}
         </button>
         <button
           type="button"

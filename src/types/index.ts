@@ -22,6 +22,7 @@ export interface Bug {
   created_at: string
   updated_at: string
   tags: string[]
+  images: string[]
   project?: Project
   creator?: { email: string; display_name?: string | null }
   updater?: { email: string; display_name?: string | null }

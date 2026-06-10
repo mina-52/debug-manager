@@ -132,6 +132,23 @@ export default async function BugDetailPage({ params }: Props) {
           <p className="text-sm text-gray-600 border-t border-gray-800 pt-4">説明なし</p>
         )}
 
+        {bug.images && bug.images.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-gray-800">
+            <p className="text-xs text-gray-500 mb-2">添付画像 ({bug.images.length})</p>
+            <div className="flex flex-wrap gap-3">
+              {(bug.images as string[]).map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
+                  <img
+                    src={url}
+                    alt={`添付画像 ${i + 1}`}
+                    className="w-32 h-32 object-cover rounded-lg border border-gray-700 hover:border-indigo-500 transition-colors"
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mt-6 pt-4 border-t border-gray-800 space-y-1.5 text-xs text-gray-500">
           <div className="flex flex-wrap gap-x-6 gap-y-1">
             <span>登録者: <span className="text-gray-400">{userDisplay(creator)}</span></span>
