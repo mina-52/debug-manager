@@ -54,7 +54,7 @@ export default async function DashboardPage() {
   const stats = await getStats(user!.id)
 
   const statCards = [
-    { label: '総バグ数', value: stats.total, icon: Bug, color: 'text-indigo-400', bg: 'bg-indigo-950' },
+    { label: '総件数', value: stats.total, icon: Bug, color: 'text-indigo-400', bg: 'bg-indigo-950' },
     { label: '未対応', value: stats.open, icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-950' },
     { label: '対応中', value: stats.in_progress, icon: Clock, color: 'text-yellow-400', bg: 'bg-yellow-950' },
     { label: '解決済', value: stats.resolved, icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-950' },
@@ -65,7 +65,7 @@ export default async function DashboardPage() {
     <div className="p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">ダッシュボード</h1>
-        <p className="text-gray-400 mt-1 text-sm">バグ管理の概要</p>
+        <p className="text-gray-400 mt-1 text-sm">要望・バグ等の概要</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
@@ -91,9 +91,9 @@ export default async function DashboardPage() {
         {stats.recent.length === 0 ? (
           <div className="px-6 py-12 text-center text-gray-500">
             <Bug className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p>バグはまだ登録されていません</p>
+            <p>要望・バグ等はまだ登録されていません</p>
             <Link href="/bugs/new" className="mt-3 inline-block text-indigo-400 hover:text-indigo-300 text-sm transition-colors">
-              最初のバグを登録する
+              最初の要望・バグ等を登録する
             </Link>
           </div>
         ) : (

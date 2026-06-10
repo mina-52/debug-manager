@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 
 const nav = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'ダッシュボード' },
-  { href: '/bugs', icon: Bug, label: 'バグ一覧' },
+  { href: '/bugs', icon: Bug, label: '要望・バグ等一覧' },
   { href: '/projects', icon: FolderOpen, label: 'プロジェクト' },
 ]
 
@@ -38,7 +38,7 @@ export default function Sidebar() {
           className="flex items-center gap-2 w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
         >
           <Plus className="w-4 h-4" />
-          新しいバグを登録
+          新しい要望・バグ等を登録
         </Link>
       </div>
 

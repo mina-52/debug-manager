@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
-import { FolderOpen } from 'lucide-react'
+import { FolderOpen, ExternalLink } from 'lucide-react'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
+import Link from 'next/link'
 import ProjectActions from '@/components/projects/ProjectActions'
 
 export default async function ProjectsPage() {
@@ -43,7 +44,13 @@ export default async function ProjectsPage() {
                 <p className="text-sm text-gray-400 leading-relaxed">{project.description}</p>
               )}
               <div className="flex items-center justify-between text-xs text-gray-500 pt-1 border-t border-gray-800">
-                <span>{(project.bugs as { count: number }[])?.[0]?.count ?? 0} バグ</span>
+                <Link
+                  href={`/bugs?project=${project.id}`}
+                  className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  {(project.bugs as { count: number }[])?.[0]?.count ?? 0} 件の要望・バグ等
+                </Link>
                 <span>{format(new Date(project.created_at), 'yyyy/MM/dd', { locale: ja })}</span>
               </div>
             </div>

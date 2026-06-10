@@ -46,6 +46,7 @@ export default function BugForm({ projects, bug }: Props) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setError('ログインが必要です'); setLoading(false); return }
 
+    const now = new Date().toISOString()
     const payload = {
       title,
       description: description || null,
@@ -53,7 +54,8 @@ export default function BugForm({ projects, bug }: Props) {
       priority,
       project_id: projectId || null,
       tags,
-      updated_at: new Date().toISOString(),
+      updated_at: now,
+      updated_by: user.id,
     }
 
     let result
@@ -83,7 +85,7 @@ export default function BugForm({ projects, bug }: Props) {
           onChange={e => setTitle(e.target.value)}
           required
           className={fieldClass}
-          placeholder="バグのタイトル"
+          placeholder="タイトル"
         />
       </div>
 

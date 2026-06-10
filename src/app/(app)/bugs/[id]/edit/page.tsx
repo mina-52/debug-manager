@@ -21,9 +21,9 @@ export default async function EditBugPage({ params }: Props) {
     <div className="p-8 max-w-2xl">
       <Link href={`/bugs/${id}`} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-6 transition-colors w-fit">
         <ArrowLeft className="w-4 h-4" />
-        バグ詳細へ戻る
+        詳細へ戻る
       </Link>
-      <h1 className="text-2xl font-bold text-white mb-8">バグを編集</h1>
+      <h1 className="text-2xl font-bold text-white mb-8">要望・バグ等を編集</h1>
       <BugForm projects={projects ?? []} bug={bug} />
     </div>
   )

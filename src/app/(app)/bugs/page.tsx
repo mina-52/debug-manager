@@ -35,6 +35,11 @@ interface Props {
   searchParams: Promise<{ status?: string; priority?: string; project?: string; q?: string }>
 }
 
+function userDisplay(profile?: { email: string; display_name?: string | null } | null): string {
+  if (!profile) return ''
+  return profile.display_name || profile.email
+}
+
 export default async function BugsPage({ searchParams }: Props) {
   const params = await searchParams
   const supabase = await createClient()
@@ -52,12 +57,24 @@ export default async function BugsPage({ searchParams }: Props) {
   const { data: bugs } = await query
   const { data: projects } = await supabase.from('projects').select('id, name').order('name')
 
+  // プロフィール情報を一括取得
+  const userIds = [...new Set(bugs?.map(b => b.created_by).filter(Boolean) ?? [])]
+  const { data: profiles } = userIds.length > 0
+    ? await supabase.from('profiles').select('id, email, display_name').in('id', userIds)
+    : { data: [] }
+  const profileMap = new Map(profiles?.map(p => [p.id, p]) ?? [])
+
+  const bugsWithCreators = (bugs ?? []).map(b => ({
+    ...b,
+    creator: profileMap.get(b.created_by) ?? null,
+  })) as BugType[]
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">バグ一覧</h1>
-          <p className="text-gray-400 mt-1 text-sm">{bugs?.length ?? 0} 件のバグ</p>
+          <h1 className="text-2xl font-bold text-white">要望・バグ等一覧</h1>
+          <p className="text-gray-400 mt-1 text-sm">{bugsWithCreators.length} 件</p>
         </div>
         <Link
           href="/bugs/new"
@@ -71,19 +88,19 @@ export default async function BugsPage({ searchParams }: Props) {
       <BugFilters projects={projects ?? []} currentParams={params} />
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl mt-4">
-        {!bugs || bugs.length === 0 ? (
+        {bugsWithCreators.length === 0 ? (
           <div className="px-6 py-16 text-center text-gray-500">
             <Bug className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p>バグが見つかりません</p>
+            <p>要望・バグ等が見つかりません</p>
           </div>
         ) : (
           <ul className="divide-y divide-gray-800">
-            {(bugs as BugType[]).map(bug => (
+            {bugsWithCreators.map(bug => (
               <li key={bug.id}>
                 <Link href={`/bugs/${bug.id}`} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-800/50 transition-colors">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white">{bug.title}</p>
-                    <div className="flex items-center gap-3 mt-1">
+                    <div className="flex items-center gap-3 mt-1 flex-wrap">
                       {bug.project && (
                         <span className="text-xs text-indigo-400">{(bug.project as { name: string }).name}</span>
                       )}
@@ -93,6 +110,9 @@ export default async function BugsPage({ searchParams }: Props) {
                             <span key={tag} className="text-xs bg-gray-800 text-gray-400 rounded px-1.5 py-0.5">{tag}</span>
                           ))}
                         </div>
+                      )}
+                      {bug.creator && (
+                        <span className="text-xs text-gray-500">登録: {userDisplay(bug.creator)}</span>
                       )}
                       <span className="text-xs text-gray-500">
                         {formatDistanceToNow(new Date(bug.updated_at), { addSuffix: true, locale: ja })}

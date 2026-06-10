@@ -7,7 +7,7 @@ export default async function NewBugPage() {
 
   return (
     <div className="p-8 max-w-2xl">
-      <h1 className="text-2xl font-bold text-white mb-8">バグを登録</h1>
+      <h1 className="text-2xl font-bold text-white mb-8">要望・バグ等を登録</h1>
       <BugForm projects={projects ?? []} />
     </div>
   )

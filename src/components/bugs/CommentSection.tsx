@@ -4,16 +4,23 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import { Send, MessageSquare } from 'lucide-react'
+import { Send, MessageSquare, User } from 'lucide-react'
 import type { Comment } from '@/types'
 
 interface Props {
   bugId: string
   comments: Comment[]
   currentUserId: string
+  currentUserEmail: string
+  currentUserDisplayName?: string | null
 }
 
-export default function CommentSection({ bugId, comments: initial, currentUserId }: Props) {
+function userDisplay(profile?: { email: string; display_name?: string | null } | null): string {
+  if (!profile) return '不明'
+  return profile.display_name || profile.email
+}
+
+export default function CommentSection({ bugId, comments: initial, currentUserId, currentUserEmail, currentUserDisplayName }: Props) {
   const [comments, setComments] = useState<Comment[]>(initial)
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
@@ -31,7 +38,13 @@ export default function CommentSection({ bugId, comments: initial, currentUserId
       .single()
 
     if (data) {
-      setComments([...comments, data])
+      setComments([...comments, {
+        ...data,
+        author: {
+          email: currentUserEmail,
+          display_name: currentUserDisplayName ?? null,
+        },
+      }])
       setContent('')
     }
     setLoading(false)
@@ -57,9 +70,16 @@ export default function CommentSection({ bugId, comments: initial, currentUserId
           {comments.map(comment => (
             <li key={comment.id} className="bg-gray-800 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-gray-500">
-                  {format(new Date(comment.created_at), 'yyyy/MM/dd HH:mm', { locale: ja })}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-gray-500" />
+                  <span className="text-xs font-medium text-gray-300">
+                    {userDisplay(comment.author)}
+                  </span>
+                  <span className="text-xs text-gray-600">·</span>
+                  <span className="text-xs text-gray-500">
+                    {format(new Date(comment.created_at), 'yyyy/MM/dd HH:mm', { locale: ja })}
+                  </span>
+                </div>
                 {comment.created_by === currentUserId && (
                   <button
                     onClick={() => handleDelete(comment.id)}

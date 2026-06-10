@@ -18,12 +18,14 @@ export interface Bug {
   project_id: string | null
   assigned_to: string | null
   created_by: string
+  updated_by: string | null
   created_at: string
   updated_at: string
   tags: string[]
   project?: Project
-  creator?: { email: string }
-  assignee?: { email: string }
+  creator?: { email: string; display_name?: string | null }
+  updater?: { email: string; display_name?: string | null }
+  assignee?: { email: string; display_name?: string | null }
   comments_count?: number
 }
 
@@ -33,7 +35,7 @@ export interface Comment {
   content: string
   created_by: string
   created_at: string
-  author?: { email: string }
+  author?: { email: string; display_name?: string | null }
 }
 
 export interface Profile {
