@@ -5,10 +5,14 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Bug, LayoutDashboard, FolderOpen, LogOut, Plus, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import NotificationBell from './NotificationBell'
+import type { AppNotification } from '@/types'
 
 interface Props {
+  userId: string
   userEmail: string
   userDisplayName: string | null
+  notifications: AppNotification[]
   onNavigate?: () => void
 }
 
@@ -18,7 +22,7 @@ const nav = [
   { href: '/projects', icon: FolderOpen, label: 'プロジェクト' },
 ]
 
-export default function Sidebar({ userEmail, userDisplayName, onNavigate }: Props) {
+export default function Sidebar({ userId, userEmail, userDisplayName, notifications, onNavigate }: Props) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -33,11 +37,12 @@ export default function Sidebar({ userEmail, userDisplayName, onNavigate }: Prop
 
   return (
     <aside className="w-60 bg-gray-900 border-r border-gray-800 flex flex-col h-screen sticky top-0">
-      <div className="p-5 border-b border-gray-800">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <Bug className="w-6 h-6 text-indigo-400" />
-          <span className="font-bold text-white text-lg">DebugManager</span>
+      <div className="p-5 border-b border-gray-800 flex items-center justify-between gap-2">
+        <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
+          <Bug className="w-6 h-6 text-indigo-400 shrink-0" />
+          <span className="font-bold text-white text-lg truncate">DebugManager</span>
         </Link>
+        <NotificationBell userId={userId} initial={notifications} onNavigate={onNavigate} />
       </div>
 
       <div className="p-3">

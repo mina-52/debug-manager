@@ -4,14 +4,18 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Menu, Bug } from 'lucide-react'
 import Sidebar from './Sidebar'
+import NotificationBell from './NotificationBell'
+import type { AppNotification } from '@/types'
 
 interface Props {
+  userId: string
   userEmail: string
   userDisplayName: string | null
+  notifications: AppNotification[]
   children: React.ReactNode
 }
 
-export default function AppShell({ userEmail, userDisplayName, children }: Props) {
+export default function AppShell({ userId, userEmail, userDisplayName, notifications, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
@@ -31,8 +35,10 @@ export default function AppShell({ userEmail, userDisplayName, children }: Props
         }`}
       >
         <Sidebar
+          userId={userId}
           userEmail={userEmail}
           userDisplayName={userDisplayName}
+          notifications={notifications}
           onNavigate={() => setSidebarOpen(false)}
         />
       </div>
@@ -52,6 +58,9 @@ export default function AppShell({ userEmail, userDisplayName, children }: Props
             <Bug className="w-5 h-5 text-indigo-400" />
             <span className="font-bold text-white">DebugManager</span>
           </Link>
+          <div className="ml-auto">
+            <NotificationBell userId={userId} initial={notifications} />
+          </div>
         </header>
 
         <main className="flex-1 overflow-auto">{children}</main>

@@ -45,3 +45,32 @@ export interface Profile {
   display_name: string | null
   avatar_url: string | null
 }
+
+export type NotificationType = 'comment_added' | 'status_changed' | 'bug_created'
+
+export interface NotificationEventMeta {
+  priority?: BugPriority
+  old_status?: BugStatus
+  new_status?: BugStatus
+}
+
+export interface NotificationEvent {
+  id: string
+  type: NotificationType
+  bug_id: string | null
+  actor_id: string | null
+  title: string
+  body: string | null
+  meta: NotificationEventMeta
+  created_at: string
+}
+
+// ブラウザ標準の Notification 型と衝突するため AppNotification とする
+export interface AppNotification {
+  id: string
+  event_id: string
+  user_id: string
+  is_read: boolean
+  created_at: string
+  event?: NotificationEvent
+}
