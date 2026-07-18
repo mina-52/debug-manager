@@ -5,13 +5,15 @@ import { useRouter } from 'next/navigation'
 import { Bell, MessageSquare, RefreshCw, Bug as BugIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import type { AppNotification, NotificationEvent, NotificationType } from '@/types'
+import type { AppNotification, NotificationType } from '@/types'
 
+// 状態と Realtime 購読は AppShell 側の useNotifications が一元管理する。
+// このコンポーネントは表示と開閉だけを担当する（PC・モバイルで2つ描画されるため）。
 interface Props {
-  userId: string
-  initial: AppNotification[]
+  notifications: AppNotification[]
+  onMarkRead: (id: string) => void
+  onMarkAllRead: () => void
   onNavigate?: () => void
 }
 
@@ -27,49 +29,17 @@ const LABELS: Record<NotificationType, string> = {
   bug_created: '新しい要望・バグが登録されました',
 }
 
-export default function NotificationBell({ userId, initial, onNavigate }: Props) {
-  const [notifications, setNotifications] = useState<AppNotification[]>(initial)
+export default function NotificationBell({
+  notifications,
+  onMarkRead,
+  onMarkAllRead,
+  onNavigate,
+}: Props) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
 
   const unreadCount = notifications.filter(n => !n.is_read).length
-
-  // Realtime で自分宛ての新着を受け取る
-  useEffect(() => {
-    const supabase = createClient()
-    const channel = supabase
-      .channel(`notifications:${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`,
-        },
-        async payload => {
-          const row = payload.new as AppNotification
-          // Realtime の payload には join した event が含まれないので個別に取得する
-          const { data: event } = await supabase
-            .from('notification_events')
-            .select('*')
-            .eq('id', row.event_id)
-            .single<NotificationEvent>()
-
-          setNotifications(prev =>
-            prev.some(n => n.id === row.id)
-              ? prev
-              : [{ ...row, event: event ?? undefined }, ...prev].slice(0, 20)
-          )
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [userId])
 
   // 外側クリックで閉じる
   useEffect(() => {
@@ -83,32 +53,18 @@ export default function NotificationBell({ userId, initial, onNavigate }: Props)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [open])
 
-  async function handleSelect(notification: AppNotification) {
+  function handleSelect(notification: AppNotification) {
     setOpen(false)
     onNavigate?.()
 
     if (!notification.is_read) {
-      setNotifications(prev =>
-        prev.map(n => (n.id === notification.id ? { ...n, is_read: true } : n))
-      )
-      const supabase = createClient()
-      await supabase.from('notifications').update({ is_read: true }).eq('id', notification.id)
+      onMarkRead(notification.id)
     }
 
     if (notification.event?.bug_id) {
       router.push(`/bugs/${notification.event.bug_id}`)
       router.refresh()
     }
-  }
-
-  async function handleMarkAllRead() {
-    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
-    const supabase = createClient()
-    await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('user_id', userId)
-      .eq('is_read', false)
   }
 
   return (
@@ -132,7 +88,7 @@ export default function NotificationBell({ userId, initial, onNavigate }: Props)
             <span className="text-sm font-semibold text-white">通知</span>
             {unreadCount > 0 && (
               <button
-                onClick={handleMarkAllRead}
+                onClick={onMarkAllRead}
                 className="text-xs text-gray-400 hover:text-white transition-colors"
               >
                 すべて既読にする

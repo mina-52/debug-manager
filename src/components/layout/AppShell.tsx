@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Menu, Bug } from 'lucide-react'
 import Sidebar from './Sidebar'
 import NotificationBell from './NotificationBell'
+import { useNotifications } from '@/lib/useNotifications'
 import type { AppNotification } from '@/types'
 
 interface Props {
@@ -15,8 +16,12 @@ interface Props {
   children: React.ReactNode
 }
 
-export default function AppShell({ userId, userEmail, userDisplayName, notifications, children }: Props) {
+export default function AppShell({ userId, userEmail, userDisplayName, notifications: initialNotifications, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // ベルは PC 用サイドバーとモバイルヘッダーの2箇所に描画されるので、
+  // 購読と状態はここで1つだけ持ち、両方に配る
+  const { notifications, markRead, markAllRead } = useNotifications(userId, initialNotifications)
 
   return (
     <div className="flex min-h-screen">
@@ -35,10 +40,11 @@ export default function AppShell({ userId, userEmail, userDisplayName, notificat
         }`}
       >
         <Sidebar
-          userId={userId}
           userEmail={userEmail}
           userDisplayName={userDisplayName}
           notifications={notifications}
+          onMarkRead={markRead}
+          onMarkAllRead={markAllRead}
           onNavigate={() => setSidebarOpen(false)}
         />
       </div>
@@ -59,7 +65,11 @@ export default function AppShell({ userId, userEmail, userDisplayName, notificat
             <span className="font-bold text-white">DebugManager</span>
           </Link>
           <div className="ml-auto">
-            <NotificationBell userId={userId} initial={notifications} />
+            <NotificationBell
+              notifications={notifications}
+              onMarkRead={markRead}
+              onMarkAllRead={markAllRead}
+            />
           </div>
         </header>
 

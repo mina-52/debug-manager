@@ -9,10 +9,11 @@ import NotificationBell from './NotificationBell'
 import type { AppNotification } from '@/types'
 
 interface Props {
-  userId: string
   userEmail: string
   userDisplayName: string | null
   notifications: AppNotification[]
+  onMarkRead: (id: string) => void
+  onMarkAllRead: () => void
   onNavigate?: () => void
 }
 
@@ -22,7 +23,7 @@ const nav = [
   { href: '/projects', icon: FolderOpen, label: 'プロジェクト' },
 ]
 
-export default function Sidebar({ userId, userEmail, userDisplayName, notifications, onNavigate }: Props) {
+export default function Sidebar({ userEmail, userDisplayName, notifications, onMarkRead, onMarkAllRead, onNavigate }: Props) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -42,7 +43,12 @@ export default function Sidebar({ userId, userEmail, userDisplayName, notificati
           <Bug className="w-6 h-6 text-indigo-400 shrink-0" />
           <span className="font-bold text-white text-lg truncate">DebugManager</span>
         </Link>
-        <NotificationBell userId={userId} initial={notifications} onNavigate={onNavigate} />
+        <NotificationBell
+          notifications={notifications}
+          onMarkRead={onMarkRead}
+          onMarkAllRead={onMarkAllRead}
+          onNavigate={onNavigate}
+        />
       </div>
 
       <div className="p-3">
