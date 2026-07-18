@@ -72,14 +72,16 @@ as $$
 declare
   v_event_id uuid;
 begin
-  -- 宛先が誰もいなければイベントごと作らない（Slack にも流さない）
-  if p_recipients is null or array_length(p_recipients, 1) is null then
-    return;
-  end if;
-
+  -- イベントは常に作る。Slack はチーム全体が見る場所なので、
+  -- 「自分のバグに自分でコメントした」ような宛先0人の操作も流したいため。
   insert into notification_events (type, bug_id, actor_id, title, body, meta)
   values (p_type, p_bug_id, p_actor_id, p_title, p_body, coalesce(p_meta, '{}'::jsonb))
   returning id into v_event_id;
+
+  -- アプリ内通知は宛先がいるときだけ。自分の操作で自分の未読は増やさない。
+  if p_recipients is null or array_length(p_recipients, 1) is null then
+    return;
+  end if;
 
   insert into notifications (event_id, user_id)
   select v_event_id, unnest(p_recipients);
@@ -202,3 +204,43 @@ create trigger bugs_created_notify
 -- ============================================
 
 alter publication supabase_realtime add table public.notifications;
+
+-- ============================================
+-- Slack 連携
+-- ============================================
+-- notification_events への insert を Next.js の /api/notify/slack に転送する。
+-- Supabase Dashboard の Database > Webhooks で作る場合は以下は不要（二重投稿になる）。
+-- UI が見つからない場合はコメントを外して実行すること。
+--
+-- create extension if not exists pg_net;
+--
+-- create or replace function public.notify_slack_on_event()
+-- returns trigger
+-- language plpgsql
+-- security definer
+-- set search_path = public
+-- as $$
+-- begin
+--   perform net.http_post(
+--     url     := 'https://debug-manager.vercel.app/api/notify/slack',
+--     headers := jsonb_build_object(
+--       'Content-Type',    'application/json',
+--       'x-notify-secret', '<NOTIFY_WEBHOOK_SECRET と同じ値>'
+--     ),
+--     body    := jsonb_build_object(
+--       'type',   'INSERT',
+--       'table',  'notification_events',
+--       'record', to_jsonb(new)
+--     )
+--   );
+--   return new;
+-- end;
+-- $$;
+--
+-- create trigger notification_events_slack
+--   after insert on public.notification_events
+--   for each row execute function public.notify_slack_on_event();
+--
+-- 送信ログの確認:
+--   select created, status_code, error_msg from net._http_response
+--   order by created desc limit 10;
